@@ -49,6 +49,9 @@ router.post("/create-account", function(req, res) {
 
 router.post("/check-token", function(req, res) {
     const username = req.body.user.toLowerCase();
+    if(!tokens.hasOwnProperty(username)) {
+        return res.json({status: 231}); // account/token doesn't exist (server restart while logged in?)
+    }
     if(tokens[username].string === req.body.string && tokens[username].life > Date.now()) {
         res.json({
             status: 131,
@@ -56,11 +59,11 @@ router.post("/check-token", function(req, res) {
         }); // success
     } else if(tokens[username].life < Date.now()) {
         res.json({
-            status: 231,
+            status: 232,
         }); // session expired
     } else {
         res.json({
-            status: 232,
+            status: 233,
             receivedString: JSON.stringify(req.body),
             expectedString: tokens[username].string
         }); // invalid login token (server restart? or bugs)
@@ -69,16 +72,16 @@ router.post("/check-token", function(req, res) {
 
 router.post("/logout", function(req, res) {
     const username = req.body.user.toLowerCase();
+    if(!tokens.hasOwnProperty(username)) {
+        return res.json({status: 241}); // account/token doesn't exist (server restart while logged in?)
+    }
     if(tokens[username].string === req.body.string) { //must check token so fraudulent requests can't log out random people
         tokens[username] = {string: "", life: 0}
         res.json({
             status: 141
         }) // success
     } else {
-        res.json({
-            status: 241,
-            received: JSON.stringify(req.body)
-        }) // invalid token (so i guess you're already logged out?)
+        res.json({status: 242}) // invalid token (somehow)
     }
 })
 
